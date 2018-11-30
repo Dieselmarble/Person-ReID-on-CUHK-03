@@ -1,0 +1,2 @@
+Given a probe image (query), our task is to search in a
+gallery (database) for images that contain the same person.
