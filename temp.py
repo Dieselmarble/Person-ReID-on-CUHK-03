@@ -10,7 +10,7 @@ import matplotlib.image as mpimg # read images
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import loadmat
-#from sklearn.neighbors import NearestNeighbor
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 import time
 import sys
@@ -44,25 +44,26 @@ iden_train = np.unique(labels[train_idx-1,])
 #train_set = np.column_stack((train_idx,labels[train_idx-1,].T))
 
 # use 100 randomly selected identities from training set as validation set
-valid_label = rnd.choice(iden_train, num_validation,replace=False)
+valid_iden = rnd.choice(iden_train, num_validation,replace=False)
 valid_index = []
 for i in range (num_validation):
-    valid_index.append(np.argwhere(train_label == valid_label[i]))
+    valid_index.append(np.argwhere(train_label == valid_iden[i]))
 
 valid_index = np.concatenate(valid_index, axis=0)
 valid_idx = train_idx[valid_index].ravel()
+valid_label = labels[valid_idx-1]
 train_idx_new = np.delete(train_idx, valid_index)
-
+train_label_new = labels[train_idx_new-1]
 features_train = features[train_idx_new-1,:]
+features_valid = features[valid_idx-1,:]
 
+#classifier = KNeighborsClassifier(n_neighbors=5)  
+#classifier.fit(features_train, train_label_new)  
+#y_pred = classifier.predict(features_valid) 
 
-plotimg(filelist[10][0])
-
-
-
+#plotimg(filelist[14065][0])
 #release memory
 del valid_index
-
 
 
 # =============================================================================
