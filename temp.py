@@ -6,6 +6,7 @@ Created on Fri Nov 30 16:42:41 2018
 """
 from sklearn.model_selection import train_test_split
 import matplotlib
+import matplotlib.image as mpimg # read images
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import loadmat
@@ -31,7 +32,12 @@ rnd = np.random.RandomState(3)
 #    features = json.load(f)
 #features = np.asarray(features) 
 
-features_train = features[train_idx-1,:]
+
+def plotimg(filename):
+    imgplot = mpimg.imread('PR_data/images_cuhk03/%s' %filename)
+    #lena.shape #(512, 512, 3)
+    plt.imshow(imgplot)
+    
 # find distinct identities in training set (should be 767 refer to the protocol)
 train_label = labels[train_idx-1,]
 iden_train = np.unique(labels[train_idx-1,])
@@ -39,7 +45,6 @@ iden_train = np.unique(labels[train_idx-1,])
 
 # use 100 randomly selected identities from training set as validation set
 valid_label = rnd.choice(iden_train, num_validation,replace=False)
-
 valid_index = []
 for i in range (num_validation):
     valid_index.append(np.argwhere(train_label == valid_label[i]))
@@ -47,6 +52,18 @@ for i in range (num_validation):
 valid_index = np.concatenate(valid_index, axis=0)
 valid_idx = train_idx[valid_index].ravel()
 train_idx_new = np.delete(train_idx, valid_index)
+
+features_train = features[train_idx_new-1,:]
+
+
+plotimg(filelist[10][0])
+
+
+
+#release memory
+del valid_index
+
+
 
 # =============================================================================
 # if __name__ == "__main__":
