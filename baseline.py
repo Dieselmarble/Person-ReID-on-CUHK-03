@@ -22,17 +22,17 @@ import json
 num_identies = 1467
 num_validation = 100  
 rnd = np.random.RandomState(3)
-
-camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
-filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
-labels = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['labels'].flatten()
-train_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['train_idx'].flatten()
-#only for testing the design
-gallery_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['gallery_idx'].flatten()
-query_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['query_idx'].flatten()
-with open('PR_data/feature_data.json', 'r') as f:
-    features = json.load(f)
-features = np.asarray(features) 
+#
+#camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
+#filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
+#labels = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['labels'].flatten()
+#train_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['train_idx'].flatten()
+##only for testing the design
+#gallery_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['gallery_idx'].flatten()
+#query_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['query_idx'].flatten()
+#with open('PR_data/feature_data.json', 'r') as f:
+#    features = json.load(f)
+#features = np.asarray(features) 
 
 
 def plotimg(filename):
@@ -69,39 +69,37 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 
-for i in range (gallery_idx.shape[0]):
-    if camId_gallery[i] == 1:
-        features_gallery[i] = 0
-features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
-label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
+#for i in range (gallery_idx.shape[0]):
+#    if camId_gallery[i] == 1:
+#        features_gallery[i] = 0
+#features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
+#label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
+#
+#for i in range (query_idx.shape[0]):
+#    if camId_query[i] == 2:
+#        features_query[i] = 0
+#features_query_ = features_query[~(features_query==0).all(1)]
+#label_query_ = label_query[~(features_query==0).all(1)]
 
-for i in range (query_idx.shape[0]):
-    if camId_query[i] == 2:
-        features_query[i] = 0
-features_query_ = features_query[~(features_query==0).all(1)]
-label_query_ = label_query[~(features_query==0).all(1)]
 
-
-clf = kNN(n_neighbors=2)
-pred, errors = clf.fit(features_query_, features_gallery_)
+clf = kNN(n_neighbors=20)
+pred, errors = clf.fit(features_query, features_gallery)
 
 # return index in gallery
-pred_labels = label_gallery_[pred]
-#for i in range (query_idx.shape[0]):
-#    for j in range(10):
-#        if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
-#            pred_labels[i][j] = 0
-#        if pred_labels[i][0] != pred_labels[i][1]:
-#            pred_labels[i][0] = pred_labels[i][1]
-#        else:
-#            pred_labels[i] = 0
-#rank1 arruracy 
+pred_labels = label_gallery[pred]
+for i in range (query_idx.shape[0]):
+    for j in range(10):
+        if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
+            pred_labels[i][j] = 0
 
-#pred_labels_ = pred_labels[~(pred_labels==0).all(1)]
-#label_query = label_query[~(pred_labels==0).all(1)]
+
+for i in range (query_idx.shape[0]):
+    pred_labels_temp = pred_labels[i][np.nonzero(pred_labels[i])]
+    #pred_labels[i][~(pred_labels==0).all(1)]
+    #label_query = label_query[~(pred_labels==0).all(1)]
 #pred_labels[1] - label_query
 
-score = accuracy_score(pred_labels[:,0], label_query_)
+score = accuracy_score(pred_labels[:,0], label_query)
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory
