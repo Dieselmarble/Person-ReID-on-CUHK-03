@@ -6,3 +6,19 @@ gallery (database) for images that contain the same person.
 7,365 images with 767 identities for training,
 5,332 images with the remaining 700 identities for gallery, and
 1,400 images with the same 700 gallery identities for query.
+
+
+
+Apart from the previous evaluation method, we also report
+results using a new training/testing protocol similar to
+that of Market-1501. The new protocol splits the dataset
+into training set and testing set, which consist of 767 identities
+and 700 identities respectively. In testing, we randomly
+select one image from each camera as the query for each
+identity and use the rest of images to construct the gallery
+set. The new protocol has two advantages:1) For each identity,
+there are multiple ground truths in the gallery. This
+is more consistent with practical application scenario. 2)
+Evenly dividing the dataset into training set and testing set
+at once helps avoid repeating training and testing multiple
+times
