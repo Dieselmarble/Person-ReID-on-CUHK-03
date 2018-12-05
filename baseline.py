@@ -81,25 +81,28 @@ iden_gallery = np.unique(label_gallery)
 #features_query_ = features_query[~(features_query==0).all(1)]
 #label_query_ = label_query[~(features_query==0).all(1)]
 
+n_neighbors = 20
 
-clf = kNN(n_neighbors=20)
+clf = kNN(n_neighbors)
 pred, errors = clf.fit(features_query, features_gallery)
+
 
 # return index in gallery
 pred_labels = label_gallery[pred]
 for i in range (query_idx.shape[0]):
-    for j in range(10):
+    for j in range(n_neighbors):
         if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
             pred_labels[i][j] = 0
 
-
+pred_labels_temp = []
+N_ranklist = 10
 for i in range (query_idx.shape[0]):
-    pred_labels_temp = pred_labels[i][np.nonzero(pred_labels[i])]
-    #pred_labels[i][~(pred_labels==0).all(1)]
-    #label_query = label_query[~(pred_labels==0).all(1)]
-#pred_labels[1] - label_query
+    pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
 
-score = accuracy_score(pred_labels[:,0], label_query)
+#ranklist 
+arr_label = np.vstack(pred_labels_temp)
+#rank1 accuracy
+score = accuracy_score(arr_label[:,0], label_query)
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory
