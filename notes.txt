@@ -1,2 +1,8 @@
 Given a probe image (query), our task is to search in a
 gallery (database) for images that contain the same person.
+
+
+
+7,365 images with 767 identities for training,
+5,332 images with the remaining 700 identities for gallery, and
+1,400 images with the same 700 gallery identities for query.
