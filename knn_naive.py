@@ -31,14 +31,23 @@ class kNN:
             The distance metric learning algorithm that will provide the distance in kNN.
     """
 
-    def __init__(self, n_neighbors):#, dml_algorithm):
+    def __init__(self, n_neighbors, dml_algorithm):
         self.nn_ = n_neighbors
-#        self.dml = dml_algorithm
+        self.dml = dml_algorithm
 #        self.knn = neighbors.KNeighborsClassifier(n_neighbors)
 #        self.knn_orig = neighbors.KNeighborsClassifier(n_neighbors)
 
-    def euclidean(self,a,b):
-        return distance.euclidean(a, b)
+    def distance(self,a,b,type):
+        if type == 'euclidean':
+            return distance.euclidean(a, b)
+        elif type == 'manhattan':
+            return distance.cityblock(a, b)
+        elif type == 'chebyshev':
+            return distance.chebyshev(a, b)
+        elif type == 'cosine':
+            return distance.cosine(a, b)
+        elif type == 'correlation':
+            return distance.correlation(a, b)
     
     def fit(self,x_test,x_train):
         buffer_size = self.nn_
@@ -47,7 +56,7 @@ class kNN:
         for i in range(x_test.shape[0]): #1400
             dists = np.zeros(x_train.shape[0])
             for j in range(x_train.shape[0]): #5328
-                dist = self.euclidean(x_test[i], x_train[j])  
+                dist = self.distance(x_test[i], x_train[j],self.dml)  
                 dists[j] = dist
             #dists = heapq.nsmallest(buffer_size, dists)
             idx = dists.argsort()[:buffer_size] #indices of N minimum 
