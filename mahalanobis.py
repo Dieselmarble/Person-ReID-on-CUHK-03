@@ -17,6 +17,7 @@ from knn_naive import kNN
 import time
 import sys
 import json
+from metric_learn import MMC_Supervised
 
 # 1467 identities in total
 num_identies = 1467
@@ -69,41 +70,87 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 
-#for i in range (gallery_idx.shape[0]):
-#    if camId_gallery[i] == 1:
-#        features_gallery[i] = 0
-#features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
-#label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
-#
-#for i in range (query_idx.shape[0]):
-#    if camId_query[i] == 2:
-#        features_query[i] = 0
-#features_query_ = features_query[~(features_query==0).all(1)]
-#label_query_ = label_query[~(features_query==0).all(1)]
+# =============================================================================
+# for i in range (gallery_idx.shape[0]):
+#     if camId_gallery[i] == 1:
+#         features_gallery[i] = 0
+# features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
+# label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
+# 
+# for i in range (query_idx.shape[0]):
+#     if camId_query[i] == 2:
+#         features_query[i] = 0
+# features_query_ = features_query[~(features_query==0).all(1)]
+# label_query_ = label_query[~(features_query==0).all(1)]
+# =============================================================================
 
-n_neighbors = 20
+#n_neighbors = 20
 
 #knn classifier with metric defined
-clf = kNN(n_neighbors,'correlation')
-pred, errors = clf.fit(features_query, features_gallery)
+#clf = kNN(n_neighbors,'correlation')
+#pred, errors = clf.fit(features_query, features_gallery)
 
 
 # return index in gallery
+
+# =============================================================================
+# pred_labels = label_gallery[pred]
+# for i in range (query_idx.shape[0]):
+#     for j in range(n_neighbors):
+#         if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
+#             pred_labels[i][j] = 0
+# 
+# pred_labels_temp = []
+# N_ranklist = 10
+# for i in range (query_idx.shape[0]):
+#     pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
+# 
+# #ranklist 
+# arr_label = np.vstack(pred_labels_temp)
+# =============================================================================
+
+
+# =============================================================================
+# mmc = metric_learn.mmc.MMC(max_iter=100, max_proj=10000, \
+#                            convergence_threshold=0.001, A0=None, \
+#                            diagonal=False, diagonal_c=1.0, verbose=False)
+# =============================================================================
+
+print('start!')
+mmc = MMC_Supervised(max_iter = 3,convergence_threshold=1,num_constraints=2,verbose=True)
+mmc.fit(features_train, train_label_new)
+
+mc_trans = mmc.transformer() #returns L
+mc_mat = mmc.metric() # returns L^T*L
+
+features_query2 = mmc.transform(features_query)
+features_gallery2 =mmc.transform(features_gallery) 
+
+n_neighbors = 20
+#knn classifier with metric defined
+clf = kNN(n_neighbors,'euclidean')
+pred, errors = clf.fit(features_query2, features_gallery2)
+
+ 
 pred_labels = label_gallery[pred]
 for i in range (query_idx.shape[0]):
     for j in range(n_neighbors):
         if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
             pred_labels[i][j] = 0
-
+ 
 pred_labels_temp = []
 N_ranklist = 10
 for i in range (query_idx.shape[0]):
     pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
-
+ 
 #ranklist 
 arr_label = np.vstack(pred_labels_temp)
+
+
 #rank1 accuracy
 score = accuracy_score(arr_label[:,0], label_query)
+
+
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory
