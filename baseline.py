@@ -13,6 +13,7 @@ from scipy.io import loadmat
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
+from sklearn import svm
 from knn_naive import kNN
 import time
 import sys
@@ -22,7 +23,7 @@ import json
 num_identies = 1467
 num_validation = 100  
 rnd = np.random.RandomState(3)
-#
+
 camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
 filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
 labels = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['labels'].flatten()
@@ -65,20 +66,16 @@ label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
 camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
-
 iden_gallery = np.unique(label_gallery)
 
 n_neighbors = 20
-
-#knn classifier with metric defined
-clf = kNN(n_neighbors,'correlation')
+clf = kNN(n_neighbors)
 pred, errors = clf.fit(features_query, features_gallery)
-
 
 # return index in gallery
 pred_labels = label_gallery[pred]
 for i in range (query_idx.shape[0]):
-    for j in range(n_neighbors):
+    for j in range(10):
         if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
             pred_labels[i][j] = 0
 
@@ -86,11 +83,13 @@ pred_labels_temp = []
 N_ranklist = 10
 for i in range (query_idx.shape[0]):
     pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
-
+ 
 #ranklist 
 arr_label = np.vstack(pred_labels_temp)
+
 #rank1 accuracy
 score = accuracy_score(arr_label[:,0], label_query)
+
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory
