@@ -13,27 +13,28 @@ from scipy.io import loadmat
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
+from sklearn import svm
 from knn_naive import kNN
-from mPA_interpolated import apk, mapk, elevenPointAP
 import time
 import sys
 import json
+#sys.path.insert(0,'\Desktop\PRCW\metric-learn-master\metric_learn')
 
 # 1467 identities in total
 num_identies = 1467
 num_validation = 100  
 rnd = np.random.RandomState(3)
 #
-camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
-filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
-labels = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['labels'].flatten()
-train_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['train_idx'].flatten()
-#only for testing the design
-gallery_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['gallery_idx'].flatten()
-query_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['query_idx'].flatten()
-with open('PR_data/feature_data.json', 'r') as f:
-    features = json.load(f)
-features = np.asarray(features) 
+#camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
+#filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
+#labels = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['labels'].flatten()
+#train_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['train_idx'].flatten()
+##only for testing the design
+#gallery_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['gallery_idx'].flatten()
+#query_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['query_idx'].flatten()
+#with open('PR_data/feature_data.json', 'r') as f:
+#    features = json.load(f)
+#features = np.asarray(features) 
 
 
 def plotimg(filename):
@@ -66,6 +67,7 @@ label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
 camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
+
 iden_gallery = np.unique(label_gallery)
 
 
@@ -81,56 +83,33 @@ iden_gallery = np.unique(label_gallery)
 #features_query_ = features_query[~(features_query==0).all(1)]
 #label_query_ = label_query[~(features_query==0).all(1)]
 
-n_neighbors = 20
 
-#knn classifier with metric defined
-clf = kNN(n_neighbors,'euclidean')
+clf = kNN(n_neighbors=20)
 pred, errors = clf.fit(features_query, features_gallery)
-
 
 # return index in gallery
 pred_labels = label_gallery[pred]
 for i in range (query_idx.shape[0]):
-    for j in range(n_neighbors):
+    for j in range(10):
         if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
             pred_labels[i][j] = 0
 
-pred_labels_temp = []
-N_ranklist = 10 # length of each ranklist
+
 for i in range (query_idx.shape[0]):
-    pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
-
-#ranklist 
-arr_label = np.vstack(pred_labels_temp)
-
-#rank1 accuracy
-#score_rank1 = accuracy_score(arr_label[:,0], label_query)
-
-# rankk accuracy
-#rankk=5
-#arr_label_rankk=np.zeros((1400,1))
-#for i in range(query_idx.shape[0]):
-#    for j in range(rankk):
-#        if (arr_label[i,j]==label_query[i]):
-#            arr_label_rankk[i]=arr_label[i,j]
-#            break
-#score_rankk = accuracy_score(arr_label_rankk, label_query)
-#
-#
-#
-##mAP at k
-#score_map = mapk(label_query,arr_label[:,0],k=20)
+    pred_labels_temp = pred_labels[i][np.nonzero(pred_labels[i])]
+    #pred_labels[i][~(pred_labels==0).all(1)]
+    #label_query = label_query[~(pred_labels==0).all(1)]
+#pred_labels[1] - label_query
 
 
+clf = svm.SVC(gamma='scale')
+clf.fit(X, y)
+SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+    decision_function_shape='ovr', degree=3, gamma='scale', kernel='rbf',
+    max_iter=-1, probability=False, random_state=None, shrinking=True,
+    tol=0.001, verbose=False)
 
-##interpolated mAP at k
-#score_map_interpolate = elevenPointAP(arr_label[:,0],label_query,k=10)
-#
-
-
-            
-    
-
+score = accuracy_score(pred_labels[:,0], label_query)
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory

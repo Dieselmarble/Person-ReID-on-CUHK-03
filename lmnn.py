@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 30 16:42:41 2018
+Created on Fri Dec  7 15:38:17 2018
 
 @author: zl6415
 """
+
+import metric_learn
+import numpy as np
+from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 import matplotlib
 import matplotlib.image as mpimg # read images
@@ -13,7 +17,7 @@ from scipy.io import loadmat
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
-from knn_dml import kNN
+from knn_naive import kNN
 import time
 import sys
 import json
@@ -67,25 +71,24 @@ label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
 camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
-
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
-#max 55564 constraints
-mmc = metric_learn.MMC_Supervised(max_iter = 100,max_proj = 1000, convergence_threshold=1e-1,
-                                  num_constraints=500,verbose=True, diagonal_c = 1.2)
-mmc.fit(features_train, train_label_new)
+# setting up LMN
+lmnn = metric_learn.LMNN(k=2, learn_rate=1e-6, regularization = 0.3, verbose=True)
 
-mc_trans = mmc.transformer() #returns L
-mc_mat = mmc.metric() # returns L^T*L
+# fit the data!
+lmnn.fit(features_train, train_label_new)
 
-features_query2 = mmc.transform(features_query)
-features_gallery2 =mmc.transform(features_gallery) 
+# transform our input space
+X_lmnn = lmnn.transform()
+features_query2 = lmnn.transform(features_query)
+features_gallery2 =lmnn.transform(features_gallery)
 
 n_neighbors = 20
 #knn classifier with metric defined
-clf = kNN(n_neighbors,'mahalanobis')
-pred, errors = clf.fit(features_query2, features_gallery2, mc_mat)
+clf = kNN(n_neighbors,'euclidean')
+pred, errors = clf.fit(features_query2, features_gallery2)
 
  
 pred_labels = label_gallery[pred]
@@ -101,10 +104,19 @@ for i in range (query_idx.shape[0]):
  
 #ranklist 
 arr_label = np.vstack(pred_labels_temp)
-
-
+#
 #rank1 accuracy
 score = accuracy_score(arr_label[:,0], label_query)
+
+# rankk accuracy
+rankk=5
+arr_label_rankk=np.zeros((1400,1))
+for i in range(query_idx.shape[0]):
+    for j in range(rankk):
+        if (arr_label[i,j]==label_query[i]):
+            arr_label_rankk[i]=arr_label[i,j]
+            break
+score_rankk = accuracy_score(arr_label_rankk, label_query)
 
 
 # =============================================================================
