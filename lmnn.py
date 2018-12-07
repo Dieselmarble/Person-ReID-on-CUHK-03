@@ -62,10 +62,10 @@ valid_idx = train_idx[valid_index].ravel()
 valid_label = labels[valid_idx-1]
 train_idx_new = np.delete(train_idx, valid_index)
 train_label_new = labels[train_idx_new-1]
-features_train = features[train_idx_new-1,:]
-features_valid = features[valid_idx-1,:]
-features_query = features[query_idx-1,]
-features_gallery = features[gallery_idx-1,]
+features_train = features[train_idx_new-1]
+features_valid = features[valid_idx-1]
+features_query = features[query_idx-1]
+features_gallery = features[gallery_idx-1]
 label_query = labels[query_idx-1]
 label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
@@ -75,7 +75,8 @@ iden_gallery = np.unique(label_gallery)
 
 print('start!')
 # setting up LMN
-lmnn = metric_learn.LMNN(k=2, learn_rate=1e-6, regularization = 0.3, verbose=True)
+lmnn = metric_learn.LMNN(k=5, learn_rate=1e-9,max_iter=100, convergence_tol=3, 
+                         regularization = 0.8, use_pca= False, verbose=True)
 
 # fit the data!
 lmnn.fit(features_train, train_label_new)

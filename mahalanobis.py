@@ -42,8 +42,9 @@ def plotimg(filename):
     plt.imshow(imgplot)
     
 # find distinct identities in training set (should be 767 refer to the protocol)
-train_label = labels[train_idx-1,]
-iden_train = np.unique(labels[train_idx-1,])
+train_label = labels[train_idx-1]
+iden_train = np.unique(labels[train_idx-1])
+features_train_old = features[train_idx-1]
 #train_set = np.column_stack((train_idx,labels[train_idx-1,].T))
 
 # use 100 randomly selected identities from training set as validation set
@@ -57,24 +58,23 @@ valid_idx = train_idx[valid_index].ravel()
 valid_label = labels[valid_idx-1]
 train_idx_new = np.delete(train_idx, valid_index)
 train_label_new = labels[train_idx_new-1]
-features_train = features[train_idx_new-1,:]
-features_valid = features[valid_idx-1,:]
-features_query = features[query_idx-1,]
-features_gallery = features[gallery_idx-1,]
+features_train = features[train_idx_new-1]
+features_valid = features[valid_idx-1]
+features_query = features[query_idx-1]
+features_gallery = features[gallery_idx-1]
 label_query = labels[query_idx-1]
 label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
 camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
-
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
 #max 55564 constraints
-mmc = metric_learn.MMC_Supervised(max_iter = 100,max_proj = 1000, convergence_threshold=1e-1,
-                                  num_constraints=500,verbose=True, diagonal_c = 1.2)
-mmc.fit(features_train, train_label_new)
-
+mmc = metric_learn.MMC_Supervised(max_iter = 20,max_proj = 1000, convergence_threshold=1e-2,
+                                  num_constraints=2,verbose=True, diagonal_c = 1.0)
+mmc.fit(features_train_old, train_label)
+print('metirc-learned')
 mc_trans = mmc.transformer() #returns L
 mc_mat = mmc.metric() # returns L^T*L
 
@@ -83,10 +83,10 @@ features_gallery2 =mmc.transform(features_gallery)
 
 n_neighbors = 20
 #knn classifier with metric defined
-clf = kNN(n_neighbors,'mahalanobis')
+clf = kNN(n_neighbors,'euclidean')
 pred, errors = clf.fit(features_query2, features_gallery2, mc_mat)
 
- 
+
 pred_labels = label_gallery[pred]
 for i in range (query_idx.shape[0]):
     for j in range(n_neighbors):
@@ -104,7 +104,7 @@ arr_label = np.vstack(pred_labels_temp)
 
 #rank1 accuracy
 score = accuracy_score(arr_label[:,0], label_query)
-
+print(score)
 
 # =============================================================================
 #plotimg(filelist[14065][0])
