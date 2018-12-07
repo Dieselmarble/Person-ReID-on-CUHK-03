@@ -14,6 +14,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
 from knn_naive import kNN
+from mPA_interpolated import apk, mapk, elevenPointAP
 import time
 import sys
 import json
@@ -65,7 +66,6 @@ label_gallery = labels[gallery_idx-1]
 camId_query = camId[query_idx-1]
 camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
-
 iden_gallery = np.unique(label_gallery)
 
 
@@ -84,7 +84,7 @@ iden_gallery = np.unique(label_gallery)
 n_neighbors = 20
 
 #knn classifier with metric defined
-clf = kNN(n_neighbors,'correlation')
+clf = kNN(n_neighbors,'euclidean')
 pred, errors = clf.fit(features_query, features_gallery)
 
 
@@ -96,14 +96,41 @@ for i in range (query_idx.shape[0]):
             pred_labels[i][j] = 0
 
 pred_labels_temp = []
-N_ranklist = 10
+N_ranklist = 10 # length of each ranklist
 for i in range (query_idx.shape[0]):
     pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
 
 #ranklist 
 arr_label = np.vstack(pred_labels_temp)
+
 #rank1 accuracy
-score = accuracy_score(arr_label[:,0], label_query)
+#score_rank1 = accuracy_score(arr_label[:,0], label_query)
+
+# rankk accuracy
+#rankk=5
+#arr_label_rankk=np.zeros((1400,1))
+#for i in range(query_idx.shape[0]):
+#    for j in range(rankk):
+#        if (arr_label[i,j]==label_query[i]):
+#            arr_label_rankk[i]=arr_label[i,j]
+#            break
+#score_rankk = accuracy_score(arr_label_rankk, label_query)
+#
+#
+#
+##mAP at k
+#score_map = mapk(label_query,arr_label[:,0],k=20)
+
+
+
+##interpolated mAP at k
+#score_map_interpolate = elevenPointAP(arr_label[:,0],label_query,k=10)
+#
+
+
+            
+    
+
 # =============================================================================
 #plotimg(filelist[14065][0])
 #release memory
