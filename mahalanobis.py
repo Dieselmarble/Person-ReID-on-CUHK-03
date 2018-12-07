@@ -17,7 +17,7 @@ from knn_naive import kNN
 import time
 import sys
 import json
-from metric_learn import MMC_Supervised
+import metric_learn import MMC_Supervised
 
 # 1467 identities in total
 num_identies = 1467
@@ -117,8 +117,8 @@ iden_gallery = np.unique(label_gallery)
 # =============================================================================
 
 print('start!')
-mmc = MMC_Supervised(max_iter = 3,convergence_threshold=1,num_constraints=2,verbose=True)
-mmc.fit(features_train, train_label_new)
+mmc = MMC_Supervised(max_iter = 1,convergence_threshold=1,num_constraints=None,verbose=True)
+mmc.fit(features_gallery, label_gallery)
 
 mc_trans = mmc.transformer() #returns L
 mc_mat = mmc.metric() # returns L^T*L
