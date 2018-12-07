@@ -35,3 +35,5 @@ https://pdfs.semanticscholar.org/1a0a/06e659eb075d414286d61bd36931770db799.pdf
 Scalable Person Re-identification: A Benchmark (use of CMC and mAP)
 https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Zheng_Scalable_Person_Re-Identification_ICCV_2015_paper.pdf
 
+LMNN
+http://jmlr.csail.mit.edu/papers/volume10/weinberger09a/weinberger09a.pdf
