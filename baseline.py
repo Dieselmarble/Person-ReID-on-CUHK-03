@@ -68,19 +68,6 @@ iden_query = np.unique(label_query)
 
 iden_gallery = np.unique(label_gallery)
 
-
-#for i in range (gallery_idx.shape[0]):
-#    if camId_gallery[i] == 1:
-#        features_gallery[i] = 0
-#features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
-#label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
-#
-#for i in range (query_idx.shape[0]):
-#    if camId_query[i] == 2:
-#        features_query[i] = 0
-#features_query_ = features_query[~(features_query==0).all(1)]
-#label_query_ = label_query[~(features_query==0).all(1)]
-
 n_neighbors = 20
 
 #knn classifier with metric defined
