@@ -18,6 +18,7 @@ import time
 import sys
 import json
 import metric_learn
+from sklearn import decomposition
 
 # 1467 identities in total
 num_identies = 1467
@@ -70,16 +71,25 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
+
+pca = decomposition.PCA(n_components=300)
+pca.fit(features_train)
+features_train_pca = pca.transform(features_train)
+
 #max 55564 constraints
-mmc = metric_learn.MMC_Supervised(max_iter = 20,max_proj = 1000, convergence_threshold=1e-2,
-                                  num_constraints=2,verbose=True, diagonal_c = 1.0)
-mmc.fit(features_train_old, train_label)
+mmc = metric_learn.MMC_Supervised(max_iter = 200,max_proj = 10000, convergence_threshold=1e-2,
+                                  num_constraints=200,verbose=True, diagonal_c = 1.0)
+mmc.fit(features_train_pca, train_label_new)
 print('metirc-learned')
 mc_trans = mmc.transformer() #returns L
 mc_mat = mmc.metric() # returns L^T*L
 
-features_query2 = mmc.transform(features_query)
-features_gallery2 =mmc.transform(features_gallery) 
+
+features_query_pca = pca.transform(features_query)
+features_gallery_pca = pca.transform(features_gallery)
+
+features_query2 = mmc.transform(features_query_pca)
+features_gallery2 =mmc.transform(features_gallery_pca) 
 
 n_neighbors = 20
 #knn classifier with metric defined

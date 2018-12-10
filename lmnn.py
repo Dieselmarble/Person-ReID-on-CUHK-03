@@ -21,7 +21,7 @@ from knn_naive import kNN
 import time
 import sys
 import json
-sys.path.insert(0, "\zl6415\Desktop\PRCW\metric-learn-master")
+from sklearn import decomposition
 import metric_learn
 
 # 1467 identities in total
@@ -74,17 +74,23 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
+pca = decomposition.PCA(n_components=100)
+pca.fit(features_train)
+features_train_pca = pca.transform(features_train)
 # setting up LMN
-lmnn = metric_learn.LMNN(k=5, learn_rate=1e-9,max_iter=100, convergence_tol=3, 
-                         regularization = 0.8, use_pca= False, verbose=True)
+lmnn = metric_learn.LMNN(k=5, learn_rate=1e-9,max_iter=2000, convergence_tol=0.01, 
+                         regularization = 0.5, use_pca= False, verbose=True)
 
 # fit the data!
-lmnn.fit(features_train, train_label_new)
+lmnn.fit(features_train_pca, train_label_new)
+
+features_query_pca = pca.transform(features_query)
+features_gallery_pca = pca.transform(features_gallery)
 
 # transform our input space
 X_lmnn = lmnn.transform()
-features_query2 = lmnn.transform(features_query)
-features_gallery2 =lmnn.transform(features_gallery)
+features_query2 = lmnn.transform(features_query_pca)
+features_gallery2 =lmnn.transform(features_gallery_pca)
 
 n_neighbors = 20
 #knn classifier with metric defined
