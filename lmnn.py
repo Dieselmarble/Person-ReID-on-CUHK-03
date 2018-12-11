@@ -27,7 +27,7 @@ import metric_learn
 # 1467 identities in total
 num_identies = 1467
 num_validation = 100  
-rnd = np.random.RandomState(3)
+rnd = np.random.RandomState(100)
 #
 camId = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['camId'].flatten()
 filelist = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['filelist'].flatten()
@@ -105,13 +105,12 @@ features_query_pca = pca2.transform(features_query)
 features_gallery_pca = pca2.transform(features_gallery)
 
 # setting up LMN
-lmnn = metric_learn.LMNN(k=2, learn_rate=1e-7,max_iter=100, convergence_tol=0.1, 
+lmnn = metric_learn.LMNN(k=2, learn_rate=1e-7,max_iter=10, convergence_tol=0.1, 
                          regularization = 0.5, use_pca= False, verbose=True)
 
 # fit the data!
 lmnn.fit(features_train_pca, train_label_new)
 # transform our input space
-#X_lmnn = lmnn.transform()
 features_train2 = lmnn.transform(features_train_pca)
 features_valid2 = lmnn.transform(features_valid_pca)
 features_query2 = lmnn.transform(features_query_pca)
@@ -126,15 +125,40 @@ rk = Rank(n_neighbors)
 ##rank1 train accuracy
 #score_train = accuracy_score(arr_label_train[:,0], train_label_new)
 
-pred_valid, errors_valid = clf.fit(features_valid2, features_valid2)
-arr_label_valid = rk.generate(valid_idx, pred_valid, valid_label, valid_label, camId_valid, camId_valid)
-#rank1 valid accuracy
-score_valid = accuracy_score(arr_label_valid[:,0], valid_label)
+valid_query_idx = []
+count1 = 0
+count2 = 0
+num = 1
+for i in range(1, len(valid_idx)):
+    if(valid_label[i] == valid_label[i-1]):
+        if(camId_valid[i] == 1) and (count1 <num):
+            valid_query_idx.append(i)
+            count1 +=1
+    if(valid_label[i] == valid_label[i-1]) and (count2 <num):
+        if(camId_valid[i] == 2):
+            valid_query_idx.append(i)
+            count2 +=1
+    if(valid_label[i] != valid_label[i-1]):
+        count1 = 0
+        count2 = 0
+valid_query_idx = np.asarray(valid_query_idx)
 
-pred_query, errors = clf.fit(features_query2, features_gallery2)
-arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
-#rank1 test accuracy
-score_test = accuracy_score(arr_label_query[:,0], label_query)
+valid_query = features_valid2[valid_query_idx,:]
+valid_gallery = np.delete(features_valid2, valid_query_idx,0)
+valid_label_q = valid_label[valid_query_idx]
+valid_label_g = np.delete(valid_label, valid_query_idx)
+cam_valid_q = camId_valid[valid_query_idx]
+cam_valid_g = np.delete(camId_valid, valid_query_idx)
+
+pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
+arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
+##rank1 valid accuracy
+score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
+print(score_valid)
+#pred_query, errors = clf.fit(features_query2, features_gallery2)
+#arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
+##rank1 test accuracy
+#score_test = accuracy_score(arr_label_query[:,0], label_query)
 
 
 # rankk test accuracy
