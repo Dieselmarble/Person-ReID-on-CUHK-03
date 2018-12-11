@@ -65,14 +65,12 @@ def best_map(l1, l2):
             G[i, j] = np.count_nonzero(ss & tt)
  
     A = la.linear_assignment(-G)
-    print(A.shape)
- 
     new_l2 = np.zeros(l2.shape)
     for i in range(0, n_class2):
+        if A[i][1] >= n_class2:
+            A[i][1] = np.random.choice(n_class2 - 1)
         new_l2[l2 == label2[A[i][1]]] = label1[A[i][0]]
     return new_l2.astype(int)
- 
-
 
 def plotimg(filename):
     imgplot = mpimg.imread('PR_data/images_cuhk03/%s' %filename)
@@ -80,10 +78,8 @@ def plotimg(filename):
     plt.imshow(imgplot)
     
 # find distinct identities in training set (should be 767 refer to the protocol)
-train_label = labels[train_idx-1,]
-iden_train = np.unique(labels[train_idx-1,])
-#train_set = np.column_stack((train_idx,labels[train_idx-1,].T))
-
+train_label = labels[train_idx-1]
+iden_train = np.unique(labels[train_idx-1])
 # use 100 randomly selected identities from training set as validation set
 valid_iden = rnd.choice(iden_train, num_validation,replace=False)
 valid_index = []
@@ -109,30 +105,32 @@ iden_gallery = np.unique(label_gallery)
 print('start!')
 # setting up LMN
 n_clusters = 700
-k_means = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, max_iter=300,
-                 tol=0.0001, precompute_distances=True, verbose=0,
+k_means = KMeans(n_clusters=n_clusters, init='k-means++', n_init=3, max_iter=20,
+                 tol=1, precompute_distances=True, verbose=1,
                  random_state=None, copy_x=True, n_jobs=1)
 k_means.fit(features_gallery)
-p_query_labels = k_means.predict(features_query)
- 
+p_query_labels = k_means.predict(features_query)        
+
+
 # calculate NMI
 nmi = normalized_mutual_info_score(label_query, p_query_labels)
 y_permuted_predict = best_map(label_query, p_query_labels)
-  
-pred_labels = y_permuted_predict
-for i in range (query_idx.shape[0]):
-    for j in range(n_neighbors):
-        if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
-            pred_labels[i][j] = 0 
-pred_labels_temp = []
-for i in range (query_idx.shape[0]):
-    pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])])
-  
-#ranklist 
-arr_label = np.vstack(pred_labels_temp)
+score = accuracy_score(y_permuted_predict, label_query)  
 
-#rank1 accuracy
-score = accuracy_score(arr_label[:,0], label_query)
+#pred_labels = y_permuted_predict
+#for i in range (query_idx.shape[0]):
+#    for j in range(n_neighbors):
+#        if (pred_labels[i][j] == label_query[i]) and (camId_query[i] == camId_gallery[pred[i]][j]):
+#            pred_labels[i][j] = 0 
+#pred_labels_temp = []
+#for i in range (query_idx.shape[0]):
+#    pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])])
+#  
+##ranklist 
+#arr_label = np.vstack(pred_labels_temp)
+#
+##rank1 accuracy
+#score = accuracy_score(arr_label[:,0], label_query)
  
 # rankk accuracy
 #rankk=5
@@ -144,15 +142,3 @@ score = accuracy_score(arr_label[:,0], label_query)
 #            break
 #score_rankk = accuracy_score(arr_label_rankk, label_query)
  
- 
-
-# =============================================================================
-#plotimg(filelist[14065][0])
-#release memory
-del valid_index
-
-
-# =============================================================================
-# if __name__ == "__main__":
-#     preprocessing()
-# =============================================================================
