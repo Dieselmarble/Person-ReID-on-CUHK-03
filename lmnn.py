@@ -92,11 +92,11 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
-pca = decomposition.PCA(n_components=30)
+pca = decomposition.PCA(n_components=500)
 pca.fit(features_train)
-pca1 = decomposition.PCA(n_components=30)
+pca1 = decomposition.PCA(n_components=500)
 pca1.fit(features_valid)
-pca2 = decomposition.PCA(n_components=30)
+pca2 = decomposition.PCA(n_components=500)
 pca2.fit(features_gallery)
 
 features_train_pca = pca.transform(features_train)
@@ -105,8 +105,8 @@ features_query_pca = pca2.transform(features_query)
 features_gallery_pca = pca2.transform(features_gallery)
 
 # setting up LMN
-lmnn = metric_learn.LMNN(k=2, learn_rate=1e-7,max_iter=10, convergence_tol=0.1, 
-                         regularization = 0.5, use_pca= False, verbose=True)
+lmnn = metric_learn.LMNN(k=5, learn_rate=1e-9,max_iter=1000, convergence_tol=1, 
+                         regularization = 0.8, use_pca= False, verbose=True)
 
 # fit the data!
 lmnn.fit(features_train_pca, train_label_new)
@@ -122,7 +122,7 @@ clf = kNN(n_neighbors,'euclidean')
 rk = Rank(n_neighbors)
 #pred_train, errors_train = clf.fit(features_train2, features_train2)
 #arr_label_train = rk.generate(train_idx_new, pred_train, train_label_new, train_label_new, camId_train, camId_train)
-##rank1 train accuracy
+#rank1 train accuracy
 #score_train = accuracy_score(arr_label_train[:,0], train_label_new)
 
 valid_query_idx = []
@@ -154,11 +154,11 @@ pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
 arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
 ##rank1 valid accuracy
 score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
-print(score_valid)
-#pred_query, errors = clf.fit(features_query2, features_gallery2)
-#arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
-##rank1 test accuracy
-#score_test = accuracy_score(arr_label_query[:,0], label_query)
+
+pred_query, errors = clf.fit(features_query2, features_gallery2)
+arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
+#rank1 test accuracy
+score_test = accuracy_score(arr_label_query[:,0], label_query)
 
 
 # rankk test accuracy
