@@ -91,13 +91,13 @@ for n_pca in range (len(N_pca)):
     features_query_pca = pca2.transform(features_query)
     features_gallery_pca = pca2.transform(features_gallery)
     
-    n_num_constraints = [5,10,30]
-    n_diagonal_c = [1.0,2.0,3.0]
+    n_num_constraints = [3,10,20]
+    n_diagonal_c = [0.5,1,2]
     
     for n_c in range(len(n_num_constraints)):
         for n_dc in range(len(n_diagonal_c)):
             #max 55564 constraints
-            mmc = metric_learn.MMC_Supervised(max_iter = 200,max_proj = 1000, convergence_threshold=1e-3,
+            mmc = metric_learn.MMC_Supervised(max_iter = 1,max_proj = 1000, convergence_threshold=1e-3,
                                               num_constraints=n_num_constraints[n_c],verbose=True, diagonal_c = n_diagonal_c[n_dc])
             mmc.fit(features_train_pca, train_label_new)
             
@@ -110,53 +110,57 @@ for n_pca in range (len(N_pca)):
             #knn classifier with metric defined
             clf = kNN(n_neighbors,'euclidean')
             rk = Rank(n_neighbors)
+            #validation
+#            valid_query_idx = []
+#            count1 = 0
+#            count2 = 0
+#            num = 1
+#            for i in range(1, len(valid_idx)):
+#                if(valid_label[i] == valid_label[i-1]):
+#                    if(camId_valid[i] == 1) and (count1 <num):
+#                        valid_query_idx.append(i)
+#                        count1 +=1
+#                if(valid_label[i] == valid_label[i-1]) and (count2 <num):
+#                    if(camId_valid[i] == 2):
+#                        valid_query_idx.append(i)
+#                        count2 +=1
+#                if(valid_label[i] != valid_label[i-1]):
+#                    count1 = 0
+#                    count2 = 0
+#            valid_query_idx = np.asarray(valid_query_idx)
+#            valid_query = features_valid2[valid_query_idx,:]
+#            valid_gallery = np.delete(features_valid2, valid_query_idx,0)
+#            valid_label_q = valid_label[valid_query_idx]
+#            valid_label_g = np.delete(valid_label, valid_query_idx)
+#            cam_valid_q = camId_valid[valid_query_idx]
+#            cam_valid_g = np.delete(camId_valid, valid_query_idx)
             
-            valid_query_idx = []
-            count1 = 0
-            count2 = 0
-            num = 1
-            for i in range(1, len(valid_idx)):
-                if(valid_label[i] == valid_label[i-1]):
-                    if(camId_valid[i] == 1) and (count1 <num):
-                        valid_query_idx.append(i)
-                        count1 +=1
-                if(valid_label[i] == valid_label[i-1]) and (count2 <num):
-                    if(camId_valid[i] == 2):
-                        valid_query_idx.append(i)
-                        count2 +=1
-                if(valid_label[i] != valid_label[i-1]):
-                    count1 = 0
-                    count2 = 0
-            valid_query_idx = np.asarray(valid_query_idx)
-            valid_query = features_valid2[valid_query_idx,:]
-            valid_gallery = np.delete(features_valid2, valid_query_idx,0)
-            valid_label_q = valid_label[valid_query_idx]
-            valid_label_g = np.delete(valid_label, valid_query_idx)
-            cam_valid_q = camId_valid[valid_query_idx]
-            cam_valid_g = np.delete(camId_valid, valid_query_idx)
+#            pred_train, errors_train = clf.fit(features_train2, features_train2)
+#            arr_label_train = rk.generate(train_idx_new, pred_train, train_label_new, train_label_new, camId_train, camId_train)
+#            rank1 train accuracy
+#            score_train = accuracy_score(arr_label_train[:,0], train_label_new)
             
-            pred_train, errors_train = clf.fit(features_train2, features_train2)
-            arr_label_train = rk.generate(train_idx_new, pred_train, train_label_new, train_label_new, camId_train, camId_train)
-            rank1 train accuracy
-            score_train = accuracy_score(arr_label_train[:,0], train_label_new)
-            
-            pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
-            arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
+#            pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
+#            arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
             ##rank1 valid accuracy
-            score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
+#            score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
             
             pred_query, errors = clf.fit(features_query2, features_gallery2)
             arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
             #rank1 test accuracy
             score_test = accuracy_score(arr_label_query[:,0], label_query)
+            
+            score_train = 0
+            score_valid = 0
             ans.append(N_pca[n_pca])
             ans.append(n_num_constraints[n_c])
             ans.append(n_diagonal_c[n_dc])
             ans.append(score_train)
             ans.append(score_valid)
             ans.append(score_test)
-            print('pca number = %d, number of constrains = %d, diagnoal c = %f ' (N_pca[n_pca], n_num_constraints[n_c], n_diagonal_c[n_dc]))
-            print('score train = %f, score_valid = %f, score test = %f,' (score_train, score_valid, score_test))
+
+            print('pca number = %d, number of constrains = %d, diagnoal c = %f ' %(N_pca[n_pca], n_num_constraints[n_c], n_diagonal_c[n_dc]))
+            print('score train = %f, score_valid = %f, score test = %f,' %(score_train, score_valid, score_test))
 # rankk test accuracy
 #rankk=5
 #arr_label_rankk=np.zeros((1400,1))
