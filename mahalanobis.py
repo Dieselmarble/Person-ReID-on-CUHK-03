@@ -78,7 +78,7 @@ print('start!')
 ans = []
 N_pca = [100,300]
 for n_pca in range (len(N_pca)):
-    pca_temp = N_pca[i]
+    pca_temp = N_pca[n_pca]
     pca = decomposition.PCA(n_components=pca_temp)
     pca.fit(features_train)
     pca1 = decomposition.PCA(n_components=pca_temp)
