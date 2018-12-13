@@ -68,30 +68,28 @@ camId_gallery = camId[gallery_idx-1]
 iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
-print('start!')
-lda = LinearDiscriminantAnalysis(n_components= 100)
-#lda.fit(features_gallery,label_gallery)
-#pred_labels = lda.predict(features_query)
+
 #
-#features_query2 = lda.transform(features_query)
-#features_gallery2 = lda.transform(features_gallery)
+#for i in range (gallery_idx.shape[0]):
+#    if camId_gallery[i] == 1:
+#        features_gallery[i] = 0
+#features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
+#label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
+#
+#for i in range (query_idx.shape[0]):
+#    if camId_query[i] == 2:
+#        features_query[i] = 0
+#features_query_ = features_query[~(features_query==0).all(1)]
+#label_query_ = label_query[~(features_query==0).all(1)]
+
+print('start!')
+lda = LinearDiscriminantAnalysis(n_components= 30)
+lda.fit(features_train,train_label_new)
+features_query2 = lda.transform(features_query)
+features_gallery2 = lda.transform(features_gallery)
 
 
-
-for i in range (gallery_idx.shape[0]):
-    if camId_gallery[i] == 1:
-        features_gallery[i] = 0
-features_gallery_ = features_gallery[~(features_gallery==0).all(1)]  
-label_gallery_ = label_gallery[~(features_gallery==0).all(1)]  
-
-for i in range (query_idx.shape[0]):
-    if camId_query[i] == 2:
-        features_query[i] = 0
-features_query_ = features_query[~(features_query==0).all(1)]
-label_query_ = label_query[~(features_query==0).all(1)]
-
-lda.fit(features_gallery_,label_gallery_)
-pred_labels = lda.predict(features_query_)
+#pred_labels = lda.predict(features_query_)
 
 
 n_neighbors = 20
@@ -99,12 +97,12 @@ n_neighbors = 20
 clf = kNN(n_neighbors,'euclidean')
 rk = Rank(n_neighbors)
 
-score_test = accuracy_score(pred_labels, label_query_)
+#score_test = accuracy_score(pred_labels, label_query_)
 
-#pred_query, errors = clf.fit(features_query2, features_gallery2)
-#arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
-##rank1 test accuracy
-#score_test = accuracy_score(arr_label_query[:,0], label_query)
+pred_query, errors = clf.fit(features_query2, features_gallery2)
+arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
+#rank1 test accuracy
+score_test = accuracy_score(arr_label_query[:,0], label_query)
 
 #
 #
@@ -144,5 +142,4 @@ score_test = accuracy_score(pred_labels, label_query_)
 #
 #rank1 accuracy
 #score = accuracy_score(arr_label[:,0], label_query)
-
 
