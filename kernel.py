@@ -22,7 +22,7 @@ import json
 from sklearn import decomposition
 import metric_learn
 from sklearn.decomposition import KernelPCA
-#from sklearn.kernel_approximation import RBFSampler
+from sklearn.kernel_approximation import RBFSampler
 
 # 1467 identities in total
 num_identies = 1467
@@ -39,23 +39,6 @@ query_idx = loadmat('PR_data/cuhk03_new_protocol_config_labeled.mat')['query_idx
 with open('PR_data/feature_data.json', 'r') as f:
     features = json.load(f)
 features = np.asarray(features) 
-
-def ranklist(idx_, pred_, label_, camId1, camId2):
-    n_neighbors_ = 20
-    pred_labels = label_[pred_]
-    for i in range (idx_.shape[0]):
-        for j in range(n_neighbors_):
-            if (pred_labels[i][j] == label_[i]) and (camId1[i] == camId2[pred_[i]][j]):
-                pred_labels[i][j] = 0
-     
-    pred_labels_temp = []
-    N_ranklist = 10
-    for i in range (idx_.shape[0]):
-        pred_labels_temp.append(pred_labels[i][np.nonzero(pred_labels[i])][:N_ranklist])
-     
-    #ranklist 
-    arr_label = np.vstack(pred_labels_temp)
-    return arr_label
 
 def plotimg(filename):
     imgplot = mpimg.imread('PR_data/images_cuhk03/%s' %filename)
@@ -91,40 +74,47 @@ iden_query = np.unique(label_query)
 iden_gallery = np.unique(label_gallery)
 
 print('start!')
-#pca = decomposition.PCA(n_components=500)
-#pca.fit(features_train)
-#pca1 = decomposition.PCA(n_components=500)
-#pca1.fit(features_valid)
-#pca2 = decomposition.PCA(n_components=500)
-#pca2.fit(features_gallery)
+pca = decomposition.PCA(n_components=30)
+pca.fit(features_train)
+pca1 = decomposition.PCA(n_components=30)
+pca1.fit(features_valid)
+pca2 = decomposition.PCA(n_components=30)
+pca2.fit(features_gallery)
 
-#features_train_pca = pca.transform(features_train)
-#features_valid_pca = pca1.transform(features_valid)
-#features_query_pca = pca2.transform(features_query)
-#features_gallery_pca = pca2.transform(features_gallery)
+features_train_pca = pca.transform(features_train)
+features_valid_pca = pca1.transform(features_valid)
+features_query_pca = pca2.transform(features_query)
+features_gallery_pca = pca2.transform(features_gallery)
 
-transformer = KernelPCA(n_components=30, kernel='poly', degree = 4, max_iter=10)
-features_train_pca = transformer.fit_transform(features_train)
-features_valid_pca = transformer.fit_transform(features_valid)
-transformer.fit(features_gallery)
-features_query_pca = transformer.transform(features_query)
-features_gallery_pca = transformer.transform(features_gallery)
+#transformer = KernelPCA(n_components=50, kernel='poly', degree = 2, max_iter=10)
+#features_train_pca = transformer.fit_transform(features_train)
+#features_valid_pca = transformer.fit_transform(features_valid)
+#transformer.fit(features_gallery)
+#features_query_pca = transformer.transform(features_query)
+#features_gallery_pca = transformer.transform(features_gallery)
 
 
-#rbf_feature = RBFSampler(gamma=1, random_state=1)
-#X_features = rbf_feature.fit_transform(X)
+
+rbf_feature = RBFSampler(gamma=1, random_state=1, n_components =30)
+rbf_feature.fit(features_train_pca)
+
+features_train1 = rbf_feature.transform(features_train_pca)
+features_valid1 = rbf_feature.transform(features_valid_pca)
+features_query1 = rbf_feature.transform(features_query_pca)
+features_gallery1 = rbf_feature.transform(features_gallery_pca)
+
 
 # setting up LMN
 lmnn = metric_learn.LMNN(k=5, learn_rate=1e-6,max_iter=1000, convergence_tol=0.1, 
                          regularization = 0.8, use_pca= False, verbose=True)
 
 # fit the data!
-lmnn.fit(features_train_pca, train_label_new)
+lmnn.fit(features_train1, train_label_new)
 # transform our input space
-features_train2 = lmnn.transform(features_train_pca)
-features_valid2 = lmnn.transform(features_valid_pca)
-features_query2 = lmnn.transform(features_query_pca)
-features_gallery2 =lmnn.transform(features_gallery_pca)
+features_train2 = lmnn.transform(features_train1)
+features_valid2 = lmnn.transform(features_valid1)
+features_query2 = lmnn.transform(features_query1)
+features_gallery2 =lmnn.transform(features_gallery1)
 
 n_neighbors = 20
 #knn classifier with metric defined
@@ -134,36 +124,36 @@ rk = Rank(n_neighbors)
 #arr_label_train = rk.generate(train_idx_new, pred_train, train_label_new, train_label_new, camId_train, camId_train)
 #rank1 train accuracy
 #score_train = accuracy_score(arr_label_train[:,0], train_label_new)
-
-valid_query_idx = []
-count1 = 0
-count2 = 0
-num = 1
-for i in range(1, len(valid_idx)):
-    if(valid_label[i] == valid_label[i-1]):
-        if(camId_valid[i] == 1) and (count1 <num):
-            valid_query_idx.append(i)
-            count1 +=1
-    if(valid_label[i] == valid_label[i-1]) and (count2 <num):
-        if(camId_valid[i] == 2):
-            valid_query_idx.append(i)
-            count2 +=1
-    if(valid_label[i] != valid_label[i-1]):
-        count1 = 0
-        count2 = 0
-valid_query_idx = np.asarray(valid_query_idx)
-
-valid_query = features_valid2[valid_query_idx,:]
-valid_gallery = np.delete(features_valid2, valid_query_idx,0)
-valid_label_q = valid_label[valid_query_idx]
-valid_label_g = np.delete(valid_label, valid_query_idx)
-cam_valid_q = camId_valid[valid_query_idx]
-cam_valid_g = np.delete(camId_valid, valid_query_idx)
-
-pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
-arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
+#
+#valid_query_idx = []
+#count1 = 0
+#count2 = 0
+#num = 1
+#for i in range(1, len(valid_idx)):
+#    if(valid_label[i] == valid_label[i-1]):
+#        if(camId_valid[i] == 1) and (count1 <num):
+#            valid_query_idx.append(i)
+#            count1 +=1
+#    if(valid_label[i] == valid_label[i-1]) and (count2 <num):
+#        if(camId_valid[i] == 2):
+#            valid_query_idx.append(i)
+#            count2 +=1
+#    if(valid_label[i] != valid_label[i-1]):
+#        count1 = 0
+#        count2 = 0
+#valid_query_idx = np.asarray(valid_query_idx)
+#
+#valid_query = features_valid2[valid_query_idx,:]
+#valid_gallery = np.delete(features_valid2, valid_query_idx,0)
+#valid_label_q = valid_label[valid_query_idx]
+#valid_label_g = np.delete(valid_label, valid_query_idx)
+#cam_valid_q = camId_valid[valid_query_idx]
+#cam_valid_g = np.delete(camId_valid, valid_query_idx)
+#
+#pred_valid, errors_valid = clf.fit(valid_query, valid_gallery)
+#arr_label_valid = rk.generate(valid_query_idx, pred_valid, valid_label_g, valid_label_q, cam_valid_q, cam_valid_g)
 ##rank1 valid accuracy
-score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
+#score_valid = accuracy_score(arr_label_valid[:,0], valid_label_q)
 
 pred_query, errors = clf.fit(features_query2, features_gallery2)
 arr_label_query = rk.generate(query_idx, pred_query, label_gallery, label_query, camId_query, camId_gallery)
